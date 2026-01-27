@@ -9,6 +9,8 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+
 import java.io.OutputStream;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class ProductoViewController {
     private final TemplateEngine templateEngine; // Motor de Thymeleaf
 
 
-    //Listado de Productos http://localhost:8082/web/productos/pdf
+      //Listado de Productos http://localhost:8082/web/productos/pdf
     @GetMapping(WebRoutes.PRODUCTOS_PDF)
     public void exportarPDF(HttpServletResponse response) throws Exception {
 
@@ -49,19 +51,21 @@ public class ProductoViewController {
         String htmlContent = templateEngine.process(ThymView.PRODUCT_LIST_PDF.getPath(), context);
 
 
+
         //Preparo la respuesta diciendole que voy a devolver un pdf
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=productos.pdf");
 
-        //Llamo a Flying Saurce y le paso el html para que lo transforme en pdf
-        //  el html tiene que estar bien formado (xhtml) o fallará el proceso, cuidado con la plantilla
+        //Código OpenHTML to PDF - CAMBIOS
+        //******************************
         OutputStream outputStream = response.getOutputStream();
-        ITextRenderer renderer = new ITextRenderer();
-        renderer.setDocumentFromString(htmlContent); //Le paso además donde están los archivos css (ruta a la carpeta static)
-        renderer.layout();
-        renderer.createPDF(outputStream);
-        
-        outputStream.close();
+        PdfRendererBuilder builder = new PdfRendererBuilder();
+        builder.withHtmlContent(htmlContent, null); // El 'null' es la base URL
+        builder.toStream(outputStream);
+
+        builder.run();
+
+
     }
 
     //Listado de Productos http://localhost:8082/web/productos
